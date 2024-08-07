@@ -2,19 +2,448 @@
 from pathlib import Path
 import re
 
-# -ONS変数メモ-
+def default_txt():
+	s = ''';mode800
+*define
 
-# デバッグモード
-DEBUG_MODE = 0
+caption "孤独に効く百合 for ONScripter"
 
-# effect管理用変数
-effect_startnum = 10
-effect_list = []
+rmenu "Ｓａｖｅ",save,"Ｌｏａｄ",load,"Ｓｋｉｐ",skip,"Ｒｅｓｅｔ",reset
+savename "セーブ","ロード","データ"
+savenumber 18
+transmode alpha
+globalon
+rubyon
+nsa
+humanz 10
+windowback
+
+
+effect 7,10,1200
+effect 8,10,400
+effect 9,10,500
+effect 10,10,1000
+
+;<<-EFFECT->>
+
+defsub textclear_d
+defsub tati
+defsub ab
+
+game
+;----------------------------------------
+*tati
+	;path,effect,layer(+20),pos
+	getparam $1,%1,%2,$2
+	lsph %2,$1,0,0
+	
+	getspsize %2,%5,%6
+	
+	mov %7,400-%5/2
+	mov %8,600-%6
+	
+	if $2=="left"  sub %7,200
+	if $2=="right" add %7,200
+	
+	amsp %2,%7,%8
+	vsp %2,1
+	print %1
+	
+return
+;----------------------------------------
+*ab
+	;auto_break_line - 関数名短くしたほうが変換時txt容量小さくなるのでab
+	;文字/数字 150~159までを使ってます
+	getparam $150,%155
+	
+	mov %158,26		;一行に表示する文字数
+	mov %159,17		;この行数まで到達したらor超えそうになったら改ページ
+
+	;文字スキップ
+	if %155==0 mov $151,"@"
+	if %155!=0 mov $151,""
+
+	;文字列の長さを代入→なぜか倍の数字出るので÷2
+	len %150,$150
+	div %150,2
+
+	;使用行数を代入するため取得文字数を一行に表示する文字数で割る
+	mov %151,%150/%158
+
+	;上記"/"は切り捨てのため余りがある(割り切れてない)場合はもう一行分追加
+	mov %152,%150 mod %158
+	if %152!=0 add %151,1
+
+	;使用行数をカウントへ代入
+	add %153,%151
+
+	;カウントが超えた場合goto
+	if %153=%159 goto *brline_max1
+	if %153>%159 if $151=="" goto *brline_max2
+	if %153>%159 if $151!="" goto *brline_max3
+
+	;通常時
+	$150$151
+	saveon
+return
+
+;カウントちょうどMAX時飛び先
+*brline_max1
+	$150\\
+	mov %153,0
+	saveon
+return
+
+;カウントMAX超え時飛び先
+*brline_max2
+	\\
+*brline_max3
+	mov %153,%151
+	textclear
+	$150$151
+	saveon
+return
+;----------------------------------------
+*textclear_d
+	mov %153,0
+	textclear
+	saveon
+return
+;----------------------------------------
+*start
+
+;debug
+;mov %500,1
+
+wait 200
+bg "data\\image\\logo.png",7
+wait 1600
+bg white,8
+
+setwindow 25,45,26,23,29,29,0,0,20,1,1,"data\\image\\massage_bg2.png",0,0
+
+;タイトル表示前に文字スプライトをロードすることで、
+;「タイトルが出ているのにロード待ち」状態をなくす
+
+lsp 30,":s;#FFFFFF#CCCCFFはじめから",630,330
+lsp 31,":s;#FFFFFF#CCCCFFつづきから",630,365
+lsp 32,":s;#FFFFFF#CCCCFF　アルバム",630,400
+lsp 33,":s;#FFFFFF#CCCCFF　　おわり",630,435
+
+bg "data\\bgimage\\title.png",9
+
+*title_loop
+	bclear
+	spbtn 30,30
+	spbtn 31,31
+	if %500==1 spbtn 32,32
+	spbtn 33,33
+	
+	btnwait %50
+	
+	if %50==30 csp -1:goto *SCR_A000_ks
+	if %50==31 csp -1:bg "data\\image\\loadmode_bg_normal.png",1:systemcall load:reset
+	if %50==32 csp -1:goto *grpmode
+	if %50==33 end
+	
+goto *title_loop
+;----------------------------------------
+*grpmode
+
+lsp 60,"data\\bgimage\\01_0_0_thumb.png", 61,74
+lsp 61,"data\\bgimage\\02_0_0_thumb.png",198,74
+lsp 62,"data\\bgimage\\03_0_0_thumb.png",335,74
+lsp 63,"data\\bgimage\\04_0_0_thumb.png",472,74
+lsp 64,"data\\bgimage\\05_0_0_thumb.png",609,74
+lsp 65,"data\\bgimage\\06_0_0_thumb.png", 61,177
+lsp 66,"data\\bgimage\\07_0_0_thumb.png",198,177
+lsp 67,"data\\bgimage\\09_0_0_thumb.png",335,177
+lsp 68,"data\\bgimage\\10_0_0_thumb.png",472,177
+lsp 69,"data\\bgimage\\11_0_0_thumb.png",609,177
+lsp 70,"data\\bgimage\\12_0_0_thumb.png", 61,280
+lsp 71,"data\\bgimage\\13_0_0_thumb.png",198,280
+
+bg "data\\image\\album_bg_normal.png",10
+
+select "０１"  ,*grp01,
+       "０２"  ,*grp02,
+       "０３"  ,*grp03,
+       "０４"  ,*grp04,
+       "０５"  ,*grp05,
+       "０６"  ,*grp06,
+       "０７"  ,*grp07,
+       "０８"  ,*grp09,
+       "０９"  ,*grp10,
+       "１０"  ,*grp11,
+       "１１"  ,*grp12,
+       "１２"  ,*grp13,
+       "もどる",*grp_end
+
+*grp01
+csp -1
+bg "data\\bgimage\\01_0_0.png",8:click
+bg "data\\bgimage\\01_0_1.png",8:click
+bg "data\\bgimage\\01_1_0.png",8:click
+bg "data\\bgimage\\01_1_1.png",8:click
+bg "data\\bgimage\\01_2_0.png",8:click
+bg "data\\bgimage\\01_2_1.png",8:click
+bg "data\\bgimage\\01_3_0.png",8:click
+bg "data\\bgimage\\01_3_1.png",8:click
+goto *grpmode
+
+*grp02
+csp -1
+bg "data\\bgimage\\02_0_0.png",8:click
+bg "data\\bgimage\\02_0_1.png",8:click
+bg "data\\bgimage\\02_1_0.png",8:click
+bg "data\\bgimage\\02_1_1.png",8:click
+bg "data\\bgimage\\02_2_0.png",8:click
+bg "data\\bgimage\\02_2_1.png",8:click
+bg "data\\bgimage\\02_2_2.png",8:click
+bg "data\\bgimage\\02_3_0.png",8:click
+bg "data\\bgimage\\02_3_1.png",8:click
+bg "data\\bgimage\\02_3_2.png",8:click
+goto *grpmode
+
+*grp03
+csp -1
+bg "data\\bgimage\\03_0_0.png",8:click
+bg "data\\bgimage\\03_0_1.png",8:click
+bg "data\\bgimage\\03_0_2.png",8:click
+bg "data\\bgimage\\03_1_0.png",8:click
+bg "data\\bgimage\\03_1_1.png",8:click
+bg "data\\bgimage\\03_2_0.png",8:click
+bg "data\\bgimage\\03_2_1.png",8:click
+bg "data\\bgimage\\03_2_2.png",8:click
+bg "data\\bgimage\\03_3_0.png",8:click
+bg "data\\bgimage\\03_3_1.png",8:click
+bg "data\\bgimage\\03_3_2.png",8:click
+bg "data\\bgimage\\03_4_0.png",8:click
+bg "data\\bgimage\\03_4_1.png",8:click
+bg "data\\bgimage\\03_5_0.png",8:click
+bg "data\\bgimage\\03_5_1.png",8:click
+bg "data\\bgimage\\03_5_2.png",8:click
+goto *grpmode
+
+*grp04
+csp -1
+bg "data\\bgimage\\04_0_0.png",8:click
+bg "data\\bgimage\\04_0_1.png",8:click
+bg "data\\bgimage\\04_0_2.png",8:click
+bg "data\\bgimage\\04_0_3.png",8:click
+bg "data\\bgimage\\04_1_0.png",8:click
+bg "data\\bgimage\\04_1_1.png",8:click
+bg "data\\bgimage\\04_1_2.png",8:click
+bg "data\\bgimage\\04_1_3.png",8:click
+bg "data\\bgimage\\04_2_0.png",8:click
+bg "data\\bgimage\\04_2_1.png",8:click
+bg "data\\bgimage\\04_2_2.png",8:click
+bg "data\\bgimage\\04_2_3.png",8:click
+bg "data\\bgimage\\04_3_0.png",8:click
+bg "data\\bgimage\\04_3_1.png",8:click
+bg "data\\bgimage\\04_3_2.png",8:click
+bg "data\\bgimage\\04_3_3.png",8:click
+bg "data\\bgimage\\04_4_0.png",8:click
+bg "data\\bgimage\\04_4_1.png",8:click
+bg "data\\bgimage\\04_4_2.png",8:click
+bg "data\\bgimage\\04_4_3.png",8:click
+bg "data\\bgimage\\04_5_0.png",8:click
+bg "data\\bgimage\\04_5_1.png",8:click
+bg "data\\bgimage\\04_5_2.png",8:click
+bg "data\\bgimage\\04_5_3.png",8:click
+goto *grpmode
+
+*grp05
+csp -1
+bg "data\\bgimage\\05_0_0.png",8:click
+bg "data\\bgimage\\05_0_1.png",8:click
+bg "data\\bgimage\\05_0_2.png",8:click
+bg "data\\bgimage\\05_0_3.png",8:click
+bg "data\\bgimage\\05_1_0.png",8:click
+bg "data\\bgimage\\05_1_1.png",8:click
+bg "data\\bgimage\\05_1_2.png",8:click
+bg "data\\bgimage\\05_1_3.png",8:click
+bg "data\\bgimage\\05_2_0.png",8:click
+bg "data\\bgimage\\05_2_1.png",8:click
+bg "data\\bgimage\\05_2_2.png",8:click
+bg "data\\bgimage\\05_2_3.png",8:click
+bg "data\\bgimage\\05_3_0.png",8:click
+bg "data\\bgimage\\05_3_1.png",8:click
+bg "data\\bgimage\\05_3_2.png",8:click
+bg "data\\bgimage\\05_3_3.png",8:click
+bg "data\\bgimage\\05_4_0.png",8:click
+bg "data\\bgimage\\05_4_1.png",8:click
+bg "data\\bgimage\\05_4_2.png",8:click
+bg "data\\bgimage\\05_4_3.png",8:click
+bg "data\\bgimage\\05_5_0.png",8:click
+bg "data\\bgimage\\05_5_1.png",8:click
+bg "data\\bgimage\\05_5_2.png",8:click
+bg "data\\bgimage\\05_5_3.png",8:click
+bg "data\\bgimage\\05_6_0.png",8:click
+bg "data\\bgimage\\05_6_1.png",8:click
+bg "data\\bgimage\\05a_0_0.png",8:click
+bg "data\\bgimage\\05a_0_1.png",8:click
+bg "data\\bgimage\\05a_0_2.png",8:click
+bg "data\\bgimage\\05a_0_3.png",8:click
+bg "data\\bgimage\\05a_1_0.png",8:click
+bg "data\\bgimage\\05a_1_1.png",8:click
+bg "data\\bgimage\\05a_1_2.png",8:click
+bg "data\\bgimage\\05a_1_3.png",8:click
+bg "data\\bgimage\\05a_2_0.png",8:click
+bg "data\\bgimage\\05a_2_1.png",8:click
+bg "data\\bgimage\\05a_2_2.png",8:click
+bg "data\\bgimage\\05a_2_3.png",8:click
+bg "data\\bgimage\\05a_3_0.png",8:click
+bg "data\\bgimage\\05a_3_1.png",8:click
+bg "data\\bgimage\\05a_3_2.png",8:click
+bg "data\\bgimage\\05a_3_3.png",8:click
+bg "data\\bgimage\\05a_4_0.png",8:click
+bg "data\\bgimage\\05a_4_1.png",8:click
+bg "data\\bgimage\\05a_4_2.png",8:click
+bg "data\\bgimage\\05a_4_3.png",8:click
+bg "data\\bgimage\\05a_5_0.png",8:click
+bg "data\\bgimage\\05a_5_1.png",8:click
+bg "data\\bgimage\\05a_5_2.png",8:click
+bg "data\\bgimage\\05a_5_3.png",8:click
+goto *grpmode
+
+*grp06
+csp -1
+bg "data\\bgimage\\06_0_0.png",8:click
+bg "data\\bgimage\\06_0_1.png",8:click
+bg "data\\bgimage\\06_0_2.png",8:click
+bg "data\\bgimage\\06_0_3.png",8:click
+goto *grpmode
+
+*grp07
+csp -1
+bg "data\\bgimage\\07_0_0.png",8:click
+bg "data\\bgimage\\07_0_1.png",8:click
+bg "data\\bgimage\\07_0_2.png",8:click
+bg "data\\bgimage\\07_0_3.png",8:click
+bg "data\\bgimage\\07_1_0.png",8:click
+bg "data\\bgimage\\07_1_1.png",8:click
+bg "data\\bgimage\\07_1_2.png",8:click
+bg "data\\bgimage\\07_1_3.png",8:click
+bg "data\\bgimage\\07_2_0.png",8:click
+bg "data\\bgimage\\07_2_1.png",8:click
+bg "data\\bgimage\\07_2_2.png",8:click
+bg "data\\bgimage\\07_2_3.png",8:click
+bg "data\\bgimage\\07_3_0.png",8:click
+bg "data\\bgimage\\07_3_1.png",8:click
+bg "data\\bgimage\\07_3_2.png",8:click
+bg "data\\bgimage\\07_3_3.png",8:click
+bg "data\\bgimage\\07_4_0.png",8:click
+bg "data\\bgimage\\07_4_1.png",8:click
+bg "data\\bgimage\\07_4_2.png",8:click
+bg "data\\bgimage\\07_4_3.png",8:click
+goto *grpmode
+
+*grp09
+csp -1
+bg "data\\bgimage\\09_0_0.png",8:click
+bg "data\\bgimage\\09_0_1.png",8:click
+bg "data\\bgimage\\09_1_0.png",8:click
+bg "data\\bgimage\\09_1_1.png",8:click
+bg "data\\bgimage\\09_2_0.png",8:click
+bg "data\\bgimage\\09_2_1.png",8:click
+bg "data\\bgimage\\09_3_0.png",8:click
+bg "data\\bgimage\\09_3_1.png",8:click
+bg "data\\bgimage\\09_4_0.png",8:click
+bg "data\\bgimage\\09_4_1.png",8:click
+bg "data\\bgimage\\09_5_0.png",8:click
+bg "data\\bgimage\\09_5_1.png",8:click
+goto *grpmode
+
+
+*grp10
+csp -1
+bg "data\\bgimage\\10_0_0.png",8:click
+bg "data\\bgimage\\10_0_1.png",8:click
+bg "data\\bgimage\\10_0_2.png",8:click
+bg "data\\bgimage\\10_0_3.png",8:click
+bg "data\\bgimage\\10_1_0.png",8:click
+bg "data\\bgimage\\10_1_1.png",8:click
+bg "data\\bgimage\\10_1_2.png",8:click
+bg "data\\bgimage\\10_1_3.png",8:click
+bg "data\\bgimage\\10_2_0.png",8:click
+bg "data\\bgimage\\10_2_1.png",8:click
+bg "data\\bgimage\\10_2_2.png",8:click
+bg "data\\bgimage\\10_2_3.png",8:click
+bg "data\\bgimage\\10_3_0.png",8:click
+bg "data\\bgimage\\10_3_1.png",8:click
+bg "data\\bgimage\\10_3_2.png",8:click
+bg "data\\bgimage\\10_3_3.png",8:click
+bg "data\\bgimage\\09_1_1.png",8:click
+goto *grpmode
+
+
+*grp11
+csp -1
+bg "data\\bgimage\\11_0_0.png",8:click
+bg "data\\bgimage\\11_0_1.png",8:click
+bg "data\\bgimage\\11_0_2.png",8:click
+bg "data\\bgimage\\11_0_3.png",8:click
+bg "data\\bgimage\\11_1_0.png",8:click
+bg "data\\bgimage\\11_1_1.png",8:click
+bg "data\\bgimage\\11_1_2.png",8:click
+bg "data\\bgimage\\11_1_3.png",8:click
+bg "data\\bgimage\\11_2_0.png",8:click
+bg "data\\bgimage\\11_2_1.png",8:click
+bg "data\\bgimage\\11_3_0.png",8:click
+bg "data\\bgimage\\11_3_1.png",8:click
+goto *grpmode
+
+
+*grp12
+csp -1
+bg "data\\bgimage\\12_0_0.png",8:click
+bg "data\\bgimage\\12_0_1.png",8:click
+bg "data\\bgimage\\12_0_2.png",8:click
+bg "data\\bgimage\\12_0_3.png",8:click
+bg "data\\bgimage\\12_1_0.png",8:click
+bg "data\\bgimage\\12_1_1.png",8:click
+bg "data\\bgimage\\12_1_2.png",8:click
+bg "data\\bgimage\\12_1_3.png",8:click
+bg "data\\bgimage\\12_2_0.png",8:click
+bg "data\\bgimage\\12_2_1.png",8:click
+bg "data\\bgimage\\12_2_2.png",8:click
+bg "data\\bgimage\\12_2_3.png",8:click
+bg "data\\bgimage\\12_3_0.png",8:click
+bg "data\\bgimage\\12_3_1.png",8:click
+bg "data\\bgimage\\12_3_2.png",8:click
+bg "data\\bgimage\\12_3_3.png",8:click
+bg "data\\bgimage\\12_4_0.png",8:click
+bg "data\\bgimage\\12_4_1.png",8:click
+bg "data\\bgimage\\12_4_2.png",8:click
+bg "data\\bgimage\\12_4_3.png",8:click
+bg "data\\bgimage\\12_5_0.png",8:click
+bg "data\\bgimage\\12_5_1.png",8:click
+bg "data\\bgimage\\12_5_2.png",8:click
+bg "data\\bgimage\\12_5_3.png",8:click
+goto *grpmode
+
+
+*grp13
+csp -1
+bg "data\\bgimage\\13_0_0.png",8:click
+bg "data\\bgimage\\13_0_1.png",8:click
+bg "data\\bgimage\\13_0_2.png",8:click
+bg "data\\bgimage\\13_0_3.png",8:click
+bg "data\\bgimage\\13_1_0.png",8:click
+bg "data\\bgimage\\13_1_1.png",8:click
+bg "data\\bgimage\\13_1_2.png",8:click
+bg "data\\bgimage\\13_1_3.png",8:click
+goto *grpmode
+
+*grp_end
+csp -1:bg white,8
+reset
+;----------------------------------------'''
+	return s
 
 # effect生成時に使う関数
-def effect_edit(t,f):
-	global effect_list
-
+def effect_edit(t,f, effect_startnum, effect_list):
 	# 「何ミリ秒間」、「どの画像効果で」フェードするかを引数で受け取りeffect_listに記録、
 	# エフェクト番号を(effect_startnumからの)連番で発行
 	# また、過去に同一の秒数/画像の組み合わせを利用した場合は再度同じエフェクト番号になる
@@ -32,7 +461,7 @@ def effect_edit(t,f):
 	else:
 		print('ERROR: effect指定ミス')
 
-	return str(list_num)
+	return str(list_num), effect_startnum, effect_list
 
 
 #吉里吉里の命令文及び変数指定をざっくりpythonの辞書に変換するやつ
@@ -83,11 +512,14 @@ def message_replace(txt):
 
 
 # txt置換→0.txt出力関数
-def text_cnv(default, zero_txt, scenario):
+def text_cnv(debug, zero_txt, scenario):
+
+	# effect管理用変数
+	effect_startnum = 10
+	effect_list = []
 
 	#default.txtを読み込み
-	with open(default, encoding='cp932', errors='ignore') as f:
-		txt = f.read()
+	txt = default_txt()
 	
 	l = [
 		(scenario / 'A000.ks'),
@@ -108,14 +540,14 @@ def text_cnv(default, zero_txt, scenario):
 			fr = re.sub(r'\@(.+?)\n', r'[\1]\n', fr)# @からの命令も[]同様に処理したいので
 			fr = fr.replace(r'[l]', '@')# 文章停止
 			fr = fr.replace(r'[ll]', '@\n')# 文章停止+改行
-			fr = fr.replace(r'[cm]', '\n\\')# メッセージ表示を一旦消す?
-			fr = fr.replace(r'[pcm]', '\n\\\n')# とりあえずcmと同様の実装で
+			fr = fr.replace(r'[cm]', '\ntextclear_d\n')# メッセージ表示を一旦消す?
+			fr = fr.replace(r'[pcm]', '\ntextclear_d\n')# とりあえずcmと同様の実装で
 			fr = fr.replace(r'[r]', '　\n')# 一行完全な空白
 			fr = re.sub(r'\[(.+?)\]', r'\n[\1]\n', fr)#ここまで来てまだ文中に挟まってる命令は強制改行
 			fr = re.sub(r'\@\n*\\', r'\\', fr)#＠￥両方になってるのを消す
 	
 			#デコード済みtxt一つごとに開始時改行&サブルーチン化
-			if DEBUG_MODE:
+			if debug:
 				txt += '\n;--------------- '+ str(p.name) +' ---------------'
 			txt += '\n*SCR_'+ str(p.name).replace('.', '_') +'\n\n'
 
@@ -128,16 +560,32 @@ def text_cnv(default, zero_txt, scenario):
 				
 				#元々コメントアウトのやつ目立たせる
 				elif re.match(r';', line):
-					line = (r';;;;' + line) if DEBUG_MODE else ''
+					line = (r';;;;' + line) if debug else ''
 				
 				#gotoと間違えそうなやつ
 				elif re.match('\*', line): 
-					line = (';' + line) if DEBUG_MODE else ''
+					line = (';' + line) if debug else ''
+
+				#textclear
+				elif re.match(r'textclear_d', line):
+					pass
 
 				#多分セリフとか
 				elif not re.match(r'\[', line):
-					#半角置換予定
-					line = message_replace(line)
+					#半角置換
+					mrline = message_replace(line)
+
+					if mrline:
+						#行末@削除
+						if mrline[-1] == '@': mrline = mrline[0:-1]
+					
+					if mrline:
+						#無の行はクリック@飛ばす
+						if mrline == '　': line = 'ab "' + mrline + '",1'
+						else: line = 'ab "' + mrline + '",0'
+					
+					else:
+						line = ''
 
 				#命令文 - []内
 				elif kakko_line:
@@ -145,7 +593,7 @@ def text_cnv(default, zero_txt, scenario):
 					kr_cmd = d['kr_cmd']
 
 					if kr_cmd == 'msgc':
-						line = '\\'
+						line = 'textclear_d'
 
 					elif kr_cmd == 'wait':
 						line = ('wait ' + d['time'])
@@ -169,12 +617,12 @@ def text_cnv(default, zero_txt, scenario):
 						rule = d.get('rule')
 						msgc = d.get('msgc')
 
-						effect_num = effect_edit(time, 'fade') if (method == 'crossfade') else effect_edit(time, rule)
+						effect_num, effect_startnum, effect_list = effect_edit(time, 'fade', effect_startnum, effect_list) if (method == 'crossfade') else effect_edit(time, rule, effect_startnum, effect_list)
 
 						line = ('bg "data\\bgimage\\' + storage + '.png",' + effect_num)
 
 						if (msgc == 'true'):
-							line += '\n\\'
+							line += '\ntextclear_d'
 
 					elif kr_cmd == 'fgitrans':
 						#methodはcrossfade固定
@@ -185,24 +633,27 @@ def text_cnv(default, zero_txt, scenario):
 						pos = d['pos']
 						msgc = d.get('msgc')
 
-						effect_num = effect_edit(time, 'fade')
+						effect_num, effect_startnum, effect_list = effect_edit(time, 'fade', effect_startnum, effect_list)
 
 						line = ('tati "data\\fgimage\\' + storage + '.png",' + effect_num + ',2' + layer + ',"' + pos + '"')
 
 						if (msgc == 'true'):
-							line += '\n\\'
+							line += '\ntextclear_d'
 
 					elif kr_cmd == 'fgic':
 						layer = d['layer']
-						line = ('csp 2' + layer + ':print ' + effect_edit('500', 'fade'))
+						effect_num, effect_startnum, effect_list = effect_edit('500', 'fade', effect_startnum, effect_list)
+						line = ('csp 2' + layer + ':print ' + effect_num)
 
 					elif kr_cmd == 'freeimage':
 						layer = d['layer']
-						line = ('csp 2' + layer + ':print ' + effect_edit('200', 'fade'))
+						effect_num, effect_startnum, effect_list = effect_edit('200', 'fade', effect_startnum, effect_list)
+						line = ('csp 2' + layer + ':print ' + effect_num)
 
 					elif kr_cmd == 'image':
 						#本作だとラストの白背景表示のみ
-						line = 'bg white,' + effect_edit('1800', 'fade')
+						effect_num, effect_startnum, effect_list = effect_edit('1800', 'fade', effect_startnum, effect_list)
+						line = ('bg white,' + effect_num)
 
 					elif kr_cmd == 'clickskip':
 						enabled = d['enabled']
@@ -240,15 +691,15 @@ def text_cnv(default, zero_txt, scenario):
 
 					#他
 					else:
-						if DEBUG_MODE:
+						if debug:
 							#pass
 							print(kr_cmd)
 
-						line = (';' + line) if DEBUG_MODE else ''
+						line = (';' + line) if debug else ''
 
 				#その他 - エラー防止の為コメントアウト(多分ない)
 				else:
-					line = (';' + line) if DEBUG_MODE else ''
+					line = (';' + line) if debug else ''
 			
 				#変換した命令行が空ではない場合
 				if line:
@@ -264,58 +715,7 @@ def text_cnv(default, zero_txt, scenario):
 		else:
 			add0txt_effect +='effect ' + str(i) + ',18,'+e[0]+',"data\\rule\\'+str(e[1]).replace('"','')+'.png"\n'
 	
-	#ガ バ ガ バ 修 正 - 自動改行がONSで再現不可なせいで壊滅的な量になってしまった
-	txt = txt.replace('@\n　しか', '\\\n　しか')
-	txt = txt.replace(r'使っているのだろうか。@', '使っているのだろうか。\\')
-	txt = txt.replace(r'が合わさる。@', 'が合わさる。\\')
-	txt = txt.replace(r'もなってくる。@', 'もなってくる。\\')
-	txt = txt.replace(r'上目遣いに見た。@', '上目遣いに見た。\\')
-	txt = txt.replace(r'、横顔。@', '、横顔。\\')
-	txt = txt.replace(r'傾ける。@', '傾ける。\\')
-	txt = txt.replace(r'と……）@', 'と……）\\')
-	txt = txt.replace(r'残して。@', '残して。\\')
-	txt = txt.replace(r'のって！」@', 'のって！」\\')
-	txt = txt.replace(r'気が戻ってくる。@', '気が戻ってくる。\\')
-	txt = txt.replace(r'なりそう……）@', 'なりそう……）\\')
-	txt = txt.replace(r'緊張してしまう。@', '緊張してしまう。\\')
-	txt = txt.replace(r'思い浮かぶ。@', '思い浮かぶ。\\\n')
-	txt = txt.replace(r'配っているらしい。@', '配っているらしい。\\')
-	txt = txt.replace(r'情けない。@', '情けない。\\')
-	txt = txt.replace(r'気分になってくる。@', '気分になってくる。\\')
-	txt = txt.replace(r'いたします」@', 'いたします」\\')
-	txt = txt.replace(r'「ぅ……」@', '「ぅ……」\\')
-	txt = txt.replace(r'迫った。@', '迫った。\\')
-	txt = txt.replace(r'感じている。@', '感じている。\\')
-	txt = txt.replace(r'　……あ」@', '　……あ」\\')
-	txt = txt.replace(r'火照る。@', '火照る。\\')
-	txt = txt.replace(r'差した気がした。@', '差した気がした。\\')
-	txt = txt.replace(r'思えなかった。@', '思えなかった。\\')
-	txt = txt.replace(r'しよう）@', 'しよう）\\')
-	txt = txt.replace(r'ようがない。@', 'ようがない。\\')
-	txt = txt.replace(r'やり方で。@', 'やり方で。\\')
-	txt = txt.replace(r'なかったのだ。@', 'なかったのだ。\\')
-	txt = txt.replace(r'引きつる。@', '引きつる。\\')
-	txt = txt.replace(r'まで――。@', 'まで――。\\')
-	txt = txt.replace(r'眺めるなんて。@', '眺めるなんて。\\')
-	txt = txt.replace(r'頬ずりをした。@', '頬ずりをした。\\')
-	txt = txt.replace(r'言わないで」@', '言わないで」\\')
-	txt = txt.replace(r'何時……）@', '何時……）\\')
-	txt = txt.replace(r'へと持っていく。@', 'へと持っていく。\\')
-	txt = txt.replace(r'不機嫌に言う。@', '不機嫌に言う。\\')
-	txt = txt.replace(r'何だったんだろうって思う」@', '何だったんだろうって思う」\\')
-	txt = txt.replace(r'ことがある。@', 'ことがある。\\')
-	txt = txt.replace(r'しないで！」@', 'しないで！」\\')
-	txt = txt.replace(r'う気がする。@', 'う気がする。\\')
-	txt = txt.replace(r'聞こえているのだろうか。@', '聞こえているのだろうか。\\')
-	txt = txt.replace(r'体を離した。@', '体を離した。\\')
-	txt = txt.replace(r'吐き捨てるように言う。@', '吐き捨てるように言う。\\')
-	txt = txt.replace(r'しれないな……）@', 'しれないな……）\\')
-	txt = txt.replace(r'そしたら――」@', 'そしたら――」\\')
-	txt = txt.replace(r'「ん……あ……」@', '「ん……あ……」\\')
-	txt = txt.replace(r'できたのだった。@', 'できたのだった。\\')
-	txt = txt.replace(r'知らないセリも」@', '知らないセリも」\\')
-	txt = txt.replace(r'芙紗の頬が熱くなる。@', '芙紗の頬が熱くなる。\\')
-	txt = txt.replace(r'ずっと求め続けたい。@', 'ずっと求め続けたい。\\')
+	#ガ バ ガ バ 修 正
 	txt = txt.replace('wait 7000\n@', 'wait 7000\n')
 	#txt = txt.replace(r'', '')
 
@@ -345,7 +745,8 @@ def junk_del(delete_list):
 
 
 # メイン関数
-def main(debug):
+def main():
+	debug = 0
 
 	#同一階層のパスを変数へ代入
 	same_hierarchy = Path.cwd()
@@ -372,8 +773,6 @@ def main(debug):
 		'video' :(same_hierarchy / 'data' / 'video'),
 
 		'startup_tjs' :(same_hierarchy / 'data' / 'startup.tjs'),
-
-		'default':(same_hierarchy_const / 'default.txt'),
 	}
 
 	PATH_DICT2 = {
@@ -389,7 +788,7 @@ def main(debug):
 		return
 
 	#txt置換→0.txt出力
-	text_cnv(PATH_DICT['default'], PATH_DICT2['0_txt'], PATH_DICT['scenario'])
+	text_cnv(debug, PATH_DICT2['0_txt'], PATH_DICT['scenario'])
 
 	#不要データ削除
 	if not debug:
@@ -399,5 +798,5 @@ def main(debug):
 			PATH_DICT['video'],
 		])
 
-
-main(DEBUG_MODE)
+# デバッグモード - debug = 1
+main()

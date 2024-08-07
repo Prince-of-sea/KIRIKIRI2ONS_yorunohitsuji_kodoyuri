@@ -28,7 +28,6 @@
     変換前の時点で以下のような構成になっていればOKです↓<br>
 ```
 C:.
-│  default.txt
 │  KIRIKIRI2ONS_yorunohitsuji_kodoyuri.exe
 │  
 └─data
@@ -98,4 +97,4 @@ C:.
 
 ## その他
 本作の変換を追加でサポートする[PSP向け自動変換ツール作ってます](https://github.com/Prince-of-sea/ONScripter_Multi_Converter)<br>
-もしPSPで遊ぶ場合はぜひご利用ください(v1.3.0以上推奨)
+もしPSPで遊ぶ場合はぜひご利用ください(v1.4.8以上推奨)
